@@ -1,0 +1,86 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Profile {
+  id        String   @id @default(uuid()) // Corresponds to Supabase auth.users.id
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  favorites   Favorite[]
+  watchlist   WatchlistItem[]
+  ratings     Rating[]
+  reviews     Review[]
+  likes       ReviewLike[]
+}
+
+model Favorite {
+  id         String   @id @default(uuid())
+  userId     String
+  movieId    Int      // TMDB Movie ID
+  title      String
+  posterPath String?
+  createdAt  DateTime @default(now())
+
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+}
+
+model WatchlistItem {
+  id         String   @id @default(uuid())
+  userId     String
+  movieId    Int      // TMDB Movie ID
+  title      String
+  posterPath String?
+  createdAt  DateTime @default(now())
+
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+}
+
+model Rating {
+  id        String   @id @default(uuid())
+  userId    String
+  movieId   Int      // TMDB Movie ID
+  value     Int      // 1 to 10
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+}
+
+model Review {
+  id              String   @id @default(uuid())
+  userId          String
+  movieId         Int      // TMDB Movie ID
+  movieTitle      String
+  moviePosterPath String?
+  content         String   @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  profile Profile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes   ReviewLike[]
+
+  @@unique([userId, movieId])
+}
+
+model ReviewLike {
+  userId   String
+  reviewId String
+  review   Review  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  profile  Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, reviewId])
+}
